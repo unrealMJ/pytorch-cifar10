@@ -14,19 +14,6 @@ from misc import progress_bar
 CLASSES = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 
-def main():
-    parser = argparse.ArgumentParser(description="cifar-10 with PyTorch")
-    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
-    parser.add_argument('--epoch', default=200, type=int, help='number of epochs tp train for')
-    parser.add_argument('--trainBatchSize', default=100, type=int, help='training batch size')
-    parser.add_argument('--testBatchSize', default=100, type=int, help='testing batch size')
-    parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use')
-    args = parser.parse_args()
-
-    solver = Solver(args)
-    solver.run()
-
-
 class Solver(object):
     def __init__(self, config):
         self.model = None
@@ -57,7 +44,7 @@ class Solver(object):
         else:
             self.device = torch.device('cpu')
 
-        # self.model = LeNet().to(self.device)
+        self.model = LeNet().to(self.device)
         # self.model = AlexNet().to(self.device)
         # self.model = VGG11().to(self.device)
         # self.model = VGG13().to(self.device)
@@ -73,7 +60,7 @@ class Solver(object):
         # self.model = DenseNet161().to(self.device)
         # self.model = DenseNet169().to(self.device)
         # self.model = DenseNet201().to(self.device)
-        self.model = WideResNet(depth=28, num_classes=10).to(self.device)
+        # self.model = WideResNet(depth=28, num_classes=10).to(self.device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[75, 150], gamma=0.5)
@@ -137,15 +124,28 @@ class Solver(object):
         self.load_model()
         accuracy = 0
         for epoch in range(1, self.epochs + 1):
-            self.scheduler.step(epoch)
             print("\n===> epoch: %d/200" % epoch)
             train_result = self.train()
+            self.scheduler.step(epoch)
             print(train_result)
             test_result = self.test()
             accuracy = max(accuracy, test_result[1])
             if epoch == self.epochs:
                 print("===> BEST ACC. PERFORMANCE: %.3f%%" % (accuracy * 100))
                 self.save()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="cifar-10 with PyTorch")
+    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+    parser.add_argument('--epoch', default=200, type=int, help='number of epochs tp train for')
+    parser.add_argument('--trainBatchSize', default=100, type=int, help='training batch size')
+    parser.add_argument('--testBatchSize', default=100, type=int, help='testing batch size')
+    parser.add_argument('--cuda', default=torch.cuda.is_available(), type=bool, help='whether cuda is in use')
+    args = parser.parse_args()
+
+    solver = Solver(args)
+    solver.run()
 
 
 if __name__ == '__main__':
